@@ -13,8 +13,8 @@ from twilio.rest import Client
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import ChatGrant
 
-account_sid='AC3c3a888a0163b34cefa087758fa5b687'
-account_auth = "e90653fb2958c50660e259b139df491d"
+account_sid='xxxx'
+account_auth = "xxxxx"
 
 ctrx=ssl.create_default_context()
 ctrx.check_hostname=False
@@ -91,7 +91,7 @@ def send2Phone(gram,price):
     '''This function is to send the message to the phone'''
     client=Client(account_sid , account_auth)
     from_whats_app_number='whatsapp:+14155238886'
-    to_what_app_number='whatsapp:+919731780732'
+    to_what_app_number='whatsapp:+91xxxxxxxxxx'
     a="Your current grams of gold is "+str(gram)+" g.\n Selling at today's price will fetch Rs "+str(gram*price)
     client.messages.create(body=a,from_=from_whats_app_number,to=to_what_app_number)
 
