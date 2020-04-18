@@ -1,7 +1,8 @@
 #Gold Price Tracker Everyday.
+import random
 import numpy as np
-
-import datetime
+from uuid import uuid4
+import base64
 import PyPDF2
 import urllib.request,urllib.parse,urllib.error
 from pdfminer.pdfdocument import PDFDocument
@@ -12,9 +13,21 @@ import io
 from twilio.rest import Client
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import ChatGrant
+import sys
+import requests
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import storage
 
-account_sid='xxxx'
-account_auth = "xxxxx"
+
+
+
+from firebase_admin import credentials
+
+
+
+account_sid='AC3c3a888a0163b34cefa087758fa5b687'
+account_auth = "989d8ae13c77fce5abb67043a82dd403"
 
 ctrx=ssl.create_default_context()
 ctrx.check_hostname=False
@@ -23,7 +36,7 @@ ctrx.verify_mode=ssl.CERT_NONE
 grams=1032.6/1000 # Denotes the number of grams that is present with you currently.
 gold_prices=[]
 print("Your Current Grams of Gold is %f"%grams)
-
+global date
 
 
 def get_price():
@@ -54,7 +67,7 @@ def get_date_time():
     d1=d.read().split()
     date = str(d1[0]).replace('b','').replace('\'','')# Gets Date from appspot
     time = str(d1[1]).replace('b','').replace('\'','')
-    return([date,time])#Returns todays date and time
+    return([date,time])#Returns today's date and time
 
 
 def plot():
@@ -84,37 +97,80 @@ def plot():
 
 
 
+def upload2firebase():
 
 
-def send2Phone(gram,price):
+    cred = credentials.Certificate(
+        "./gold-price-tracker-caa9e-firebase-adminsdk-9e39d-72694e4d52.json")
+    firebase_admin.initialize_app(cred, {
+        'storageBucket': 'gold-price-tracker-caa9e.appspot.com'
+    })
+
+    img_src = "sample_image.png"
+    bucket = storage.bucket()
+    blob = bucket.blob(img_src)
+
+    # Create new token
+    new_token = uuid4()
+
+    # Create new dictionary with the metadata
+    metadata = {"firebaseStorageDownloadTokens": new_token}
+
+    # Set metadata to blob
+    blob.metadata = metadata
+
+    # Upload file
+    blob.upload_from_filename(filename=".\Test.png", content_type='image/png')
+    blob.make_public()
+    return(blob.public_url)
+        #
+        #
+        # bucket = storage.bucket()
+        # image_data = ""
+        # with open("./Test.png", "rb") as img_file:
+        #     image_data = base64.b64encode(img_file.read())
+        #
+        # blob = bucket.blob('test.png')
+        # blob.upload_from_string(image_data)
+        # return blob.public_url
+
+
+
+def send2Phone(gram,price,r):
 
     '''This function is to send the message to the phone'''
     client=Client(account_sid , account_auth)
     from_whats_app_number='whatsapp:+14155238886'
-    to_what_app_number='whatsapp:+91xxxxxxxxxx'
+    to_what_app_number='whatsapp:+919731780732'
     a="Your current grams of gold is "+str(gram)+" g.\n Selling at today's price will fetch Rs "+str(gram*price)
-    client.messages.create(body=a,from_=from_whats_app_number,to=to_what_app_number)
+    client.messages.create(body=a,media_url=r,from_=from_whats_app_number,to=to_what_app_number)
+
+
 
 
 
 def loop():
 
-    t=get_date_time()
-    time=t[1].split(':')
-    count=0
-    if time[0] == '13' and time[1] == '49' and time[2]=='00' :
-        count=1
-    else:
-        count=0
-
-    if count==1:
-
-
+    # t=get_date_time()
+    # time=t[1].split(':')
+    # count=0
+    # if time[0] == '08' and time[1] == '57' and time[2]=='00' :
+    #     count=1
+    # else:
+    #     count=0
+    #
+    # if count==1:
         message()
         q=plot()
         q.savefig('Test.png')
-        send2Phone(grams,gold_prices[-1])
+        r=upload2firebase()
+        print(r)
+
+
+        send2Phone(grams,gold_prices[-1],r)
+
 
 
 while True:
     loop()
+    break
