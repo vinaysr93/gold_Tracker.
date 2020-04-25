@@ -1,9 +1,11 @@
 #Gold Price Tracker Everyday.
+import sqlite3
 import random
 import numpy as np
 from uuid import uuid4
 import base64
 import PyPDF2
+import openpyxl as wb
 import urllib.request,urllib.parse,urllib.error
 from pdfminer.pdfdocument import PDFDocument
 from matplotlib import pyplot as plt
@@ -39,6 +41,7 @@ print("Your Current Grams of Gold is %f"%grams)
 global date
 
 
+
 def get_price():
 
     '''This module is to get the price of gold online'''
@@ -70,17 +73,36 @@ def get_date_time():
     return([date,time])#Returns today's date and time
 
 
+def populate_database(today_date,today_price):
+    # Used to update the database with the current price
+     conn = sqlite3.connect('.\Price_tracker.db')
+     conn.row_factory = lambda cursor, row: row[0]
+     cur = conn.cursor()
+
+     cur.execute('''INSERT INTO dp_tracker(Date,Price) VALUES (?,?) ''',(today_date,today_price,))
+
+     dates_list=cur.execute('''SELECT Date FROM dp_tracker''').fetchall()
+     price_list=cur.execute('''SELECT Price FROM dp_tracker''').fetchall()
+
+     conn.commit()
+     cur.close()
+
+
+     return(dates_list,price_list)
+
+
 def plot():
 
     ''' This function is used to plot the gold price scraped online'''
-    gp=get_price()
+    gp=get_price()# Today's gold Price
     d=get_date_time()
-    date=d[0]
-    d_p={}
-    d_p[date]=gp
-    dx=list(d_p.keys())
+    date=d[0]#Todya's date
+
+    dp=populate_database(str(date),float(gp)) #Passing today's date and today's gold price and returns a list of all
+
+    dx=dp[0] #A list of dates obtained from database
     dx_pos=np.arange(len(dx))
-    py=list(d_p.values())
+    py=dp[1]#A list of prices obtained from excel file
     fig = plt.figure()
 
     plt.bar(dx_pos, py, align='center', alpha=0.5,figure=fig)
@@ -120,7 +142,7 @@ def upload2firebase():
     blob.metadata = metadata
 
     # Upload file
-    blob.upload_from_filename(filename=".\Test.png", content_type='image/png')
+    blob.upload_from_filename(filename="./Test.png", content_type='image/png')
     blob.make_public()
     return(blob.public_url)
         #
@@ -161,16 +183,15 @@ def loop():
     #
     # if count==1:
         message()
-        q=plot()
+        q = plot()
         q.savefig('Test.png')
-        r=upload2firebase()
+        r = upload2firebase()
         print(r)
 
 
         send2Phone(grams,gold_prices[-1],r)
 
-
-
 while True:
     loop()
+    sys.exit()
     break
