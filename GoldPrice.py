@@ -28,8 +28,8 @@ from firebase_admin import credentials
 
 
 
-account_sid='AC3c3a888a0163b34cefa087758fa5b687'
-account_auth = "989d8ae13c77fce5abb67043a82dd403"
+account_sid='my_account_sid'
+account_auth = "my_account_authorization"
 
 ctrx=ssl.create_default_context()
 ctrx.check_hostname=False
@@ -123,7 +123,7 @@ def upload2firebase():
 
 
     cred = credentials.Certificate(
-        "./gold-price-tracker-caa9e-firebase-adminsdk-9e39d-72694e4d52.json")
+        "credentials")
     firebase_admin.initialize_app(cred, {
         'storageBucket': 'gold-price-tracker-caa9e.appspot.com'
     })
@@ -163,7 +163,7 @@ def send2Phone(gram,price,r):
     '''This function is to send the message to the phone'''
     client=Client(account_sid , account_auth)
     from_whats_app_number='whatsapp:+14155238886'
-    to_what_app_number='whatsapp:+919731780732'
+    to_what_app_number='whatsapp:+91my_phone_number'
     a="Your current grams of gold is "+str(gram)+" g.\n Selling at today's price will fetch Rs "+str(gram*price)
     client.messages.create(body=a,media_url=r,from_=from_whats_app_number,to=to_what_app_number)
 
